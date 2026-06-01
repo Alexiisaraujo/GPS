@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Brasería — Cardápio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0b07;
+    --surface: #1a1510;
+    --card: #231e17;
+    --gold: #c9933a;
+    --gold-light: #e8b96a;
+    --cream: #f5ead8;
+    --muted: #8a7a65;
+    --red: #c94a3a;
+    --green: #3a9c5f;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--cream);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid rgba(201,147,58,0.25);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo { font-family: 'Playfair Display', serif; }
+  .logo h1 { font-size: 1.6rem; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
+  .logo p { font-size: 0.7rem; color: var(--muted); letter-spacing: 4px; text-transform: uppercase; }
+
+  .geo-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    cursor: pointer;
+    border: 1px solid rgba(201,147,58,0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    transition: all 0.2s;
+  }
+  .geo-status:hover { border-color: var(--gold); color: var(--gold); }
+  .geo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .geo-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+  .geo-dot.near { background: var(--gold); box-shadow: 0 0 6px var(--gold); animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* NOTIFICACIÓN TOAST */
+  #toast {
+    position: fixed;
+    top: 90px;
+    right: 1.5rem;
+    z-index: 999;
+    background: var(--gold);
+    color: #1a1000;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    max-width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateX(400px);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+    font-size: 0.9rem;
+  }
+  #toast.show { transform: translateX(0); }
+  #toast .toast-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  #toast .toast-close {
+    position: absolute; top: 8px; right: 12px;
+    cursor: pointer; font-size: 1.1rem; opacity: 0.6;
+  }
+  #toast .toast-close:hover { opacity: 1; }
+
+  /* BANNER DE OFERTA */
+  #offer-banner {
+    display: none;
+    background: linear-gradient(135deg, #3a1f00, #5a3010);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    margin: 1.5rem 2rem;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    animation: slideDown 0.5s ease;
+  }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  #offer-banner.show { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .offer-icon { font-size: 2rem; }
+  .offer-text h2 { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 1.1rem; }
+  .offer-text p { color: var(--cream); font-size: 0.875rem; opacity: 0.85; margin-top: 2px; }
+  .offer-badge {
+    margin-left: auto;
+    background: var(--gold);
+    color: #1a1000;
+    font-weight: 700;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* RADAR / PANEL DE PRUEBA */
+  .demo-panel {
+    margin: 0 2rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid rgba(201,147,58,0.2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .demo-panel h3 {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .demo-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .distance-display {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--gold);
+    min-width: 80px;
+  }
+  .distance-display span { font-size: 0.9rem; color: var(--muted); margin-left: 4px; }
+  input[type=range] {
+    flex: 1;
+    min-width: 150px;
+    accent-color: var(--gold);
+    cursor: pointer;
+    height: 4px;
+  }
+  .zone-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .zone-label-near { color: var(--green); font-weight: 700; }
+  .btn-activate {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 0.5rem 1.25rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .btn-activate:hover { background: var(--gold); color: #1a1000; }
+
+  /* MENÚ */
+  .section-title {
+    padding: 1.5rem 2rem 1rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--gold-light);
+    border-bottom: 1px solid rgba(201,147,58,0.15);
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 1rem 2rem 2rem;
+  }
+
+  .menu-card {
+    background: var(--card);
+    border: 1px solid rgba(201,147,58,0.1);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+  }
+  .menu-card:hover { transform: translateY(-2px); border-color: rgba(201,147,58,0.4); }
+  .menu-card.highlight {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(201,147,58,0.15);
+  }
+  .menu-card.highlight::before {
+    content: '🔥 OFERTA HOY';
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--gold);
+    color: #1a1000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    z-index: 2;
+  }
+
+  .card-img {
+    width: 100%; height: 160px;
+    object-fit: cover;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem;
+    background: #2a221a;
+  }
+  .card-body { padding: 1rem; }
+  .card-body h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 4px; }
+  .card-body p { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  .card-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .price { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--gold); }
+  .price-old { text-decoration: line-through; color: var(--muted); font-size: 0.85rem; margin-left: 6px; }
+  .btn-add {
+    background: var(--gold);
+    color: #1a1000;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: 'Lato', sans-serif;
+    transition: background 0.2s;
+  }
+  .btn-add:hover { background: var(--gold-light); }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    border-top: 1px solid rgba(201,147,58,0.1);
+  }
+
+  /* MAPA MINI RADAR */
+  .radar-wrap { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .radar {
+    width: 80px; height: 80px; flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(201,147,58,0.3);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .radar::before, .radar::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(201,147,58,0.2);
+  }
+  .radar::before { width: 50%; height: 50%; }
+  .radar::after { width: 75%; height: 75%; }
+  .radar-line {
+    position: absolute;
+    width: 50%; height: 1px;
+    background: linear-gradient(to right, var(--gold), transparent);
+    transform-origin: left center;
+    left: 50%; top: 50%;
+    animation: sweep 2s linear infinite;
+  }
+  @keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .radar-dot-store {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+  }
+  .radar-dot-user {
+    width: 8px; height: 8px;
+    background: #44aaff;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+    transition: left 0.5s, top 0.5s;
+    box-shadow: 0 0 6px #44aaff;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <h1>LA BRASERÍA</h1>
+    <p>Maringá · Paraná</p>
+  </div>
+  <div class="geo-status" id="geoBtn" onclick="activateGeo()">
+    <div class="geo-dot" id="geoDot"></div>
+    <span id="geoLabel">Activar ubicación</span>
+  </div>
+</header>
+
+<!-- TOAST NOTIFICACIÓN -->
+<div id="toast">
+  <div class="toast-close" onclick="closeToast()">✕</div>
+  <div class="toast-title">📍 ¡Estás cerca!</div>
+  <p id="toast-msg">Tenemos una oferta especial para vos hoy. ¡Vení y aprovechá!</p>
+</div>
+
+<!-- BANNER OFERTA -->
+<div id="offer-banner">
+  <div class="offer-icon">🥩</div>
+  <div class="offer-text">
+    <h2>¡Oferta especial porque estás cerca!</h2>
+    <p id="offer-desc">Picanha doble + bebida con 20% off solo hoy. Mostrá esta pantalla al llegar.</p>
+  </div>
+  <div class="offer-badge" id="offer-badge">20% OFF</div>
+</div>
+
+<!-- PANEL DE DEMO -->
+<div class="demo-panel">
+  <h3>⚙ Panel de prueba — simulá tu distancia</h3>
+  <div class="radar-wrap">
+    <div class="radar" id="radarEl">
+      <div class="radar-line"></div>
+      <div class="radar-dot-store" id="storeDot" style="left: 50%; top: 50%; transform: translate(-50%,-50%)"></div>
+      <div class="radar-dot-user" id="userDot" style="left: 10%; top: 50%; transform: translate(-50%,-50%)"></div>
+    </div>
+    <div style="flex:1">
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <div class="distance-display"><span id="distVal">2.5</span><span>km</span></div>
+        <input type="range" id="distSlider" min="0.1" max="5" step="0.1" value="2.5" oninput="updateDistance(this.value)">
+        <button class="btn-activate" onclick="activateGeo()">📡 Activar GPS real</button>
+      </div>
+      <div class="zone-labels">
+        <span class="zone-label-near">● Zona de oferta (&lt;500m)</span>
+        <span>500m</span>
+        <span>1km</span>
+        <span>2km</span>
+        <span>5km+</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENÚ -->
+<div class="section-title">🥩 Nuestro Cardápio</div>
+<div class="menu-grid" id="menuGrid"></div>
+
+<footer>
+  © 2025 La Brasería · Maringá, Paraná · (44) 9999-0000
+</footer>
+
+<script>
+const OFFER_RADIUS = 0.5;
+const STORE_LAT = -23.421;
+const STORE_LNG = -51.933;
+
+const OFFERS = [
+  { id: 1, desc: "20% OFF en Picanha doble + bebida" },
+  { id: 2, desc: "Postre gratis con cualquier prato principal" },
+  { id: 3, desc: "Combo especial: 2 pratos + 2 bebidas por $2.500" },
+];
+
+const MENU = [
+  { emoji: '🥩', name: 'Picanha Premium', desc: 'Corte especial a la brasa con sal gruesa y manteca de hierbas', price: 1850, offer: true },
+  { emoji: '🍖', name: 'Costelão de Porco', desc: 'Costilla de cerdo marinada 24hs, sellada al carbón', price: 1420, offer: false },
+  { emoji: '🥗', name: 'Ensalada Tropical', desc: 'Rúcula, mango, queso brie y frutos secos con aderezo de maracuyá', price: 680, offer: false },
+  { emoji: '🍤', name: 'Fraldinha ao Vinho', desc: 'Fraldinha braseada en vino tinto con cebolla caramelizada', price: 1650, offer: true },
+  { emoji: '🍝', name: 'Pappardelle da Casa', desc: 'Pasta fresca al ragú de costilla deshilachada, 8 horas de cocción', price: 980, offer: false },
+  { emoji: '🍮', name: 'Pudim de Leite', desc: 'Clásico pudín de leche condensada con caramelo artesanal', price: 380, offer: false },
+];
+
+let currentDist = 2.5;
+let geoActive = false;
+let notifiedNear = false;
+let watchId = null;
+
+function renderMenu(highlight = false) {
+  const grid = document.getElementById('menuGrid');
+  grid.innerHTML = MENU.map(item => {
+    const isHighlight = highlight && item.offer;
+    const discountedPrice = isHighlight ? Math.round(item.price * 0.8) : null;
+    return `
+      <div class="menu-card ${isHighlight ? 'highlight' : ''}">
+        <div class="card-img">${item.emoji}</div>
+        <div class="card-body">
+          <h3>${item.name}</h3>
+          <p>${item.desc}</p>
+        </div>
+        <div class="card-footer">
+          <div class="price">
+            $${isHighlight ? discountedPrice.toLocaleString() : item.price.toLocaleString()}
+            ${isHighlight ? `<span class="price-old">$${item.price.toLocaleString()}</span>` : ''}
+          </div>
+          <button class="btn-add">Pedir</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateDistance(val) {
+  currentDist = parseFloat(val);
+  document.getElementById('distVal').textContent = currentDist.toFixed(1);
+  updateRadarDot(currentDist);
+  checkProximity(currentDist);
+}
+
+function updateRadarDot(dist) {
+  const radar = document.getElementById('radarEl');
+  const r = radar.offsetWidth / 2;
+  const maxDist = 5;
+  const pct = Math.min(dist / maxDist, 0.95);
+  const angle = -0.3;
+  const px = 50 + Math.cos(angle) * pct * 42;
+  const py = 50 + Math.sin(angle) * pct * 42;
+  document.getElementById('userDot').style.left = px + '%';
+  document.getElementById('userDot').style.top = py + '%';
+}
+
+function checkProximity(dist) {
+  const near = dist <= OFFER_RADIUS;
+  const dot = document.getElementById('geoDot');
+  const label = document.getElementById('geoLabel');
+  const banner = document.getElementById('offer-banner');
+
+  if (near) {
+    dot.className = 'geo-dot near';
+    label.textContent = `A ${(dist * 1000).toFixed(0)}m del local`;
+    renderMenu(true);
+    banner.classList.add('show');
+    if (!notifiedNear) {
+      notifiedNear = true;
+      showToast();
+    }
+  } else {
+    dot.className = geoActive ? 'geo-dot active' : 'geo-dot';
+    label.textContent = geoActive
+      ? `A ${dist.toFixed(1)}km del local`
+      : `Activar ubicación`;
+    renderMenu(false);
+    banner.classList.remove('show');
+    notifiedNear = false;
+  }
+}
+
+function showToast() {
+  const offer = OFFERS[Math.floor(Math.random() * OFFERS.length)];
+  document.getElementById('toast-msg').textContent = offer.desc + ' Mostrá esta pantalla al llegar 🎉';
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 5000);
+}
+
+function closeToast() {
+  document.getElementById('toast').classList.remove('show');
+}
+
+function activateGeo() {
+  if (!navigator.geolocation) {
+    alert('Tu navegador no soporta geolocalización. Usá el slider de demo.');
+    return;
+  }
+  const label = document.getElementById('geoLabel');
+  label.textContent = 'Detectando...';
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => {
+      geoActive = true;
+      const dist = haversine(pos.coords.latitude, pos.coords.longitude, STORE_LAT, STORE_LNG);
+      currentDist = dist;
+      document.getElementById('distSlider').value = Math.min(dist, 5).toFixed(1);
+      document.getElementById('distVal').textContent = Math.min(dist, 5).toFixed(1);
+      updateRadarDot(dist);
+      checkProximity(dist);
+      const dot = document.getElementById('geoDot');
+      if (dist > OFFER_RADIUS) {
+        dot.className = 'geo-dot active';
+        label.textContent = `A ${dist >= 1 ? dist.toFixed(1)+'km' : (dist*1000).toFixed(0)+'m'} del local`;
+      }
+    },
+    err => {
+      geoActive = false;
+      document.getElementById('geoLabel').textContent = 'Sin permiso — usá el slider';
+      document.getElementById('geoDot').className = 'geo-dot';
+      console.warn('Geo error:', err.message);
+    },
+    { enableHighAccuracy: true, maximumAge: 10000 }
+  );
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+renderMenu(false);
+updateRadarDot(2.5);
+</script>
+</body>
+</html>
